@@ -70,16 +70,16 @@ public class greedySalesman {
         double currentAv = 0;
         double doublingTotal = 0;
         int x = 0;
-        int angle = 90;
+        int angle = 60;
         int r = 12;
         int n = 360/angle;
         int[] vPath = new int[]{};
         double[][] costMatrix = new double[][]{};
         Pair <double[][], int[]> ans = new Pair<double[][], int[]>(costMatrix, vPath);
 
-        //ans =  GenerateRandomCircularGraphCostMatrix(n, r, angle);
+        ans =  GenerateRandomCircularGraphCostMatrix(n, r, angle);
         //ans = GenerateRandomCostMatrix(25);
-        ans= GenerateRandomEuclideanCostMatrix(6);
+        //ans= GenerateRandomEuclideanCostMatrix(6);
         // If the array is empty
         // or the index is not in array range
         // return the original array
@@ -357,53 +357,54 @@ public class greedySalesman {
         double lowestCost = 0;
         double tempCost = 0;
         int lowestNode = 0;
-        String tempPath ="";
         int visitedNode = 0;
         double minCost = Double.POSITIVE_INFINITY;;
         int i, j, k = 0;
-        List<Integer> bestPath = new ArrayList<>();
+        List<Integer> tempPath = new ArrayList<>();
         int[] resultPath = new int[costMatrix.length];
-        Boolean[] visited = new Boolean[costMatrix.length +1];
+
         int numVisited = 1;
+        tempPath.add(0);
 
-        for(int p=0; p < visited.length; p++){
-            visited[p] = false;
-        }
-        visited[0] = true;
+        int currentVertex = 0;
+        int minIndex = 0;
 
-        for(i = 0; i < costMatrix.length; i++){
-            for(j = i+1; j < costMatrix.length; j++){
-                    if(!visited[j]&& costMatrix[i][j] != -1 && costMatrix[i][j] != 0 ){
-                            tempCost = costMatrix[i][j];
-                            if(tempCost < minCost){
-                                minCost = tempCost;
-                                lowestCost = lowestCost + minCost;
-                                tempPath = Integer.toString(j);
-                                visitedNode = j;
-
-                            }
-
-                    }
-                    else{
-
-                        break;
-                    }
-            }
-            visited[visitedNode] = true;
-            visitedNode = 0;
-            if(tempPath != ""){
-                bestPath.add(Integer.parseInt(tempPath));
-            }
-            tempPath = "";
-            minCost = Double.POSITIVE_INFINITY;
-        }
+        do{
+           for(j = 0; j< costMatrix.length; j++){
+               if(currentVertex!=j && costMatrix[currentVertex][j] != -1){
+                   if(!tempPath.contains(j)){
+                       if(costMatrix[currentVertex][j]< minCost){
+                           minCost = costMatrix[currentVertex][j];
+                           minIndex = j;
+                       }
+                   }
+               }
+           }
+           if(minIndex != 0){
+               tempPath.add(minIndex);
+               currentVertex = minIndex;
+           }
+           j = 0;
+           minCost = Double.POSITIVE_INFINITY;
+            minIndex = 0;
+            numVisited++;
+        } while (numVisited < costMatrix.length);
 
 
-        for(i = 0; i < bestPath.size(); i++){
-            resultPath[i] = bestPath.get(i);
+
+        for(i = 0; i < tempPath.size(); i++){
+            resultPath[i] = tempPath.get(i);
         }
 
         return resultPath;
+    }
+
+    static int calcMin(double[][] costMatrix, int[]bestPath){
+        int minIndex = 0;
+
+
+
+        return minIndex;
     }
 
     //count the number of bits required for current fib number
