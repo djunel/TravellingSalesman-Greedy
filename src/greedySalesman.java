@@ -9,6 +9,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
+import java.awt.*;
+import javax.swing.*;
+import java.awt.geom.Line2D;
 
 
 public class greedySalesman {
@@ -19,10 +22,10 @@ public class greedySalesman {
     /* define constants */
     static long MAXVALUE =  2000000000;
     static long MINVALUE = -2000000000;
-    static int numberOfTrials = 1;
+    static int numberOfTrials = 10;
     static int MAXINPUTSIZE  = (int) Math.pow(1.5,28);
     static int MININPUTSIZE  =  1;
-    static int Nums = 1;
+    static int Nums = 10;
     static long fibResult = 0;
     // static int SIZEINCREMENT =  10000000; // not using this since we are doubling the size each time
 
@@ -57,11 +60,11 @@ public class greedySalesman {
         // run the whole experiment at least twice, and expect to throw away the data from the earlier runs, before java has fully optimized
 
         System.out.println("Running first full experiment...");
-        runFullExperiment("greedySalesman-Exp1-ThrowAway.txt");
+        runFullExperiment("TSPGreedy-Exp1-ThrowAway.txt");
         System.out.println("Running second full experiment...");
-        runFullExperiment("greedySalesman-Exp2.txt");
+        runFullExperiment("TSPGreedy-Exp2.txt");
         System.out.println("Running third full experiment...");
-        runFullExperiment("greedySalesman-Exp3.txt");
+        runFullExperiment("TSPGreedy-Exp3.txt");
     }
 
     static void runFullExperiment(String resultsFileName){
@@ -70,27 +73,33 @@ public class greedySalesman {
         double currentAv = 0;
         double doublingTotal = 0;
         int x = 0;
-        int angle = 60;
+        int angle = 90;
         int r = 12;
         int n = 360/angle;
         int[] vPath = new int[]{};
         double[][] costMatrix = new double[][]{};
         Pair <double[][], int[]> ans = new Pair<double[][], int[]>(costMatrix, vPath);
+        Pair <double[][], int[]> ans2 = new Pair<double[][], int[]>(costMatrix, vPath);
+        int n2 = 10;
+       ans =  GenerateRandomCircularGraphCostMatrix(n, r, angle);
+        //ans = GenerateRandomCostMatrix(n2);
+        //ans= GenerateRandomEuclideanCostMatrix(n2);
+        //ans2 =  GenerateRandomCircularGraphCostMatrix(n, r, angle);
+        //ans2 = GenerateRandomCostMatrix(n2);
 
-        ans =  GenerateRandomCircularGraphCostMatrix(n, r, angle);
-        //ans = GenerateRandomCostMatrix(25);
-        //ans= GenerateRandomEuclideanCostMatrix(6);
         // If the array is empty
         // or the index is not in array range
         // return the original array
         //PathMatrix.travelNodes = removeElements(PathMatrix.travelNodes);
 
-        int[] bestPath =  TSPGreedy(ans.getKey(), ans.getValue());
+        int[] bestPath =  new int[]{};
+        int[] bestPath2 =  new int[]{};
 
-        System.out.println(Arrays.toString(bestPath));
+          bestPath2 =  TSPGreedy(ans.getKey(), ans.getValue());
 
-        //GenerateRandomCostMatrix(5);
-        //GenerateRandomEuclideanCostMatrix(5);
+
+        System.out.println(Arrays.toString(bestPath2));
+
         //set up print to file
         try {
             resultsFile = new FileWriter(ResultsFolderPath + resultsFileName);
@@ -105,11 +114,11 @@ public class greedySalesman {
         ThreadCpuStopWatch TrialStopwatch = new ThreadCpuStopWatch(); // for timing an individual trial
 
         //add headers to text file
-        resultsWriter.println("#X(Value)  N(Size)  AverageTime        FibNumber   NumberOfTrials"); // # marks a comment in gnuplot data
+        resultsWriter.println("#X(Value)  N(Size)  AverageTime    NumberOfTrials"); // # marks a comment in gnuplot data
         resultsWriter.flush();
 
         /* for each size of input we want to test: in this case starting small and doubling the size each time */
-        for(int inputSize=0;inputSize<=Nums; inputSize++) {
+        for(int inputSize=3;inputSize<=Nums; inputSize++) {
             //test run for fibonacci numbers
             //verifyGreedySalesman(inputSize);
 
@@ -124,6 +133,7 @@ public class greedySalesman {
             //System.out.print("    Generating test data...");
 
             //generate random integer list
+            ans2= GenerateRandomEuclideanCostMatrix(inputSize);
             //long resultFib = Fib(x);
 
             //print progress to screen
@@ -148,7 +158,9 @@ public class greedySalesman {
 
                 //TrialStopwatch.start(); // *** uncomment this line if timing trials individually
                 /* run the function we're testing on the trial input */
+                bestPath = TSPGreedy(ans2.getKey(), ans2.getValue());
 
+                //System.out.println(Arrays.toString(bestPath));
                 //fibResult = Greedy(inputSize);
                 //System.out.println(result);
                 // batchElapsedTime = batchElapsedTime + TrialStopwatch.elapsedTime(); // *** uncomment this line if timing trials individually
@@ -160,14 +172,14 @@ public class greedySalesman {
             averageArray[x] = averageTimePerTrialInBatch;
 
             //skip this round if this is the first one (no previous average for calculation)
-            if(inputSize != 0){
-                doublingTotal = averageTimePerTrialInBatch/averageArray[x-1]; //Calculate doubling ratio
+            //if(inputSize != 0){
+                //doublingTotal = averageTimePerTrialInBatch/averageArray[x-1]; //Calculate doubling ratio
 
-            }
+           // }
             x++;
             int countingbits = countBits(inputSize);
             /* print data for this size of input */
-            resultsWriter.printf("%6d %6d %15.2f %20d %4d\n",inputSize, countingbits, averageTimePerTrialInBatch, fibResult, numberOfTrials); // might as well make the columns look nice
+            resultsWriter.printf("%6d %6d %15.2f %4d\n",inputSize, countingbits, averageTimePerTrialInBatch, numberOfTrials); // might as well make the columns look nice
             resultsWriter.flush();
             System.out.println(" ....done.");
         }
@@ -213,10 +225,16 @@ public class greedySalesman {
         return travelNodes;
     }
 
-    public static double[][] GenerateRandomCostMatrix(int n){
+    public static Pair<double[][], int[]> GenerateRandomCostMatrix(int n){
         double[][] randomCostMatrix = new double[n][n];
-        int halfN = n-Math.abs(n/2);
         int num = 1;
+
+        int[] vertexList = new int[n];
+
+        for(int i = 0; i<n; i++){
+            vertexList[i] = i;
+        }
+
         for(int t = 0; t < n; t++){
             for(int q =num; q < n; q++) {
                 if(t == q){
@@ -230,9 +248,9 @@ public class greedySalesman {
             num = num + 1;
         }
         //System.out.println(Arrays.deepToString(randomCostMatrix));
+        Pair<double[][], int[]> ans = new Pair<double[][], int[]>(randomCostMatrix, vertexList);
 
-
-        return  randomCostMatrix;
+        return  ans;
     }
 
     public static Pair<double[][], int[]> GenerateRandomEuclideanCostMatrix(int n){
@@ -263,8 +281,8 @@ public class greedySalesman {
             vertexList[i] = Integer.parseInt(v[i].name);
         }
 
-        System.out.println(Arrays.deepToString(randomEuclideanCostMatrix));
-        System.out.println(Arrays.toString(vertexList));
+        //System.out.println(Arrays.deepToString(randomEuclideanCostMatrix));
+        //System.out.println(Arrays.toString(vertexList));
         return  ans;
     }
 
@@ -288,7 +306,7 @@ public class greedySalesman {
             v[i].name = Integer.toString(i);
             v[i].x = Math.abs((int) ( r * Math.cos(angle2)));
             v[i].y = Math.abs((int) (r * Math.sin(angle2)));
-            System.out.println(v[i].x + "," + v[i].y);
+            //System.out.println(v[i].x + "," + v[i].y);
         }
 
         int[] vertexList = new int[v.length];
@@ -312,7 +330,7 @@ public class greedySalesman {
         v[n].name = "0";
 
         for(int i = 0; i<v.length-1; i++) {
-            System.out.println(v[i].name + ',' + v[i].x + "," + v[i].y);
+           // System.out.println(v[i].name + ',' + v[i].x + "," + v[i].y);
         }
 
         for(int c = 0; c<v.length-1; c++) {
@@ -339,7 +357,15 @@ public class greedySalesman {
             randomCircularCostMatrix[Integer.parseInt((v[t+1].name))][Integer.parseInt(v[t].name)] =  randomCircularCostMatrix[Integer.parseInt((v[t].name))][Integer.parseInt(v[t+1].name)];
         }
 
-        System.out.println(Arrays.deepToString(randomCircularCostMatrix));
+        for(int a = 0; a < randomCircularCostMatrix.length; a++){
+            System.out.print("[");
+            for(int b = 0; b < randomCircularCostMatrix.length; b++){
+
+                System.out.print(randomCircularCostMatrix[a][b] + " ");
+            }
+            System.out.println("]");
+        }
+        //System.out.println(Arrays.deepToString(randomCircularCostMatrix));
 
 
 
@@ -347,10 +373,14 @@ public class greedySalesman {
             vertexList[i] = Integer.parseInt(v[i].name);
         }
 
-        System.out.println(Arrays.toString(vertexList));
+
+
+        //System.out.println(Arrays.toString(vertexList));
 
         return  ans;
     }
+
+
 
     static int[] TSPGreedy(double[][] costMatrix, int[] vertexList){
 
